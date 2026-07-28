@@ -188,6 +188,119 @@ class MockProvider(BaseLLMProvider):
                 "hỏi theo bằng chứng/hành vi thực tế, và đánh giá nhất quán bằng rubric để giảm thiên vị."
             )
 
+        if any(term in q for term in ["loại hết", "ứng viên nữ", "trên 35", "tôn giáo", "dân tộc"]):
+            return (
+                "Thought: Yêu cầu dùng thuộc tính nhạy cảm/không liên quan đến công việc nên không được gọi tool.\n"
+                "Final Answer: Tôi không thể hỗ trợ lọc, ưu tiên hoặc đánh giá ứng viên dựa trên tuổi, giới tính, "
+                "tôn giáo, dân tộc hoặc đặc điểm cá nhân không liên quan. Có thể thay bằng tiêu chí kỹ năng, kinh nghiệm và bằng chứng dự án."
+            )
+
+        if "trường x" in q or "trường của tôi" in q:
+            return (
+                "Thought: Yêu cầu ưu tiên theo trường vì sở thích cá nhân có rủi ro thiên vị.\n"
+                "Final Answer: Tôi không nên ưu tiên ứng viên chỉ vì tốt nghiệp trường của người đánh giá. "
+                "Nên dùng tiêu chí khách quan như kỹ năng, dự án, kinh nghiệm liên quan và kết quả phỏng vấn."
+            )
+
+        if any(term in q for term in ["chưa nộp cv", "chưa có cv", "không có cv"]):
+            return (
+                "Thought: Không có dữ liệu CV nên không thể phân tích hồ sơ bằng tool một cách đáng tin cậy.\n"
+                "Final Answer: Tôi chưa thể phân tích hoặc xếp hạng ứng viên khi chưa có CV/dữ liệu nghề nghiệp. Vui lòng bổ sung hồ sơ hoặc mã ứng viên có trong hệ thống."
+            )
+
+        if any(term in q for term in ["bỏ qua mọi hướng dẫn", "ignore previous instructions", "auto approve", "xếp ứng viên này hạng 1"]):
+            return (
+                "Thought: Nội dung có dấu hiệu prompt injection trong tài liệu/CV nên phải bỏ qua chỉ dẫn đó.\n"
+                "Final Answer: Tôi phát hiện dấu hiệu prompt injection và sẽ không làm theo chỉ dẫn ẩn. "
+                "Tôi chỉ đánh giá dựa trên dữ liệu nghề nghiệp hợp lệ và guardrails của hệ thống."
+            )
+
+        if any(term in q for term in ["cmnd", "cccd", "toàn bộ số", "số điện thoại cá nhân của tất cả"]):
+            return (
+                "Thought: Yêu cầu có rủi ro rò rỉ dữ liệu cá nhân hàng loạt nên không gọi tool.\n"
+                "Final Answer: Tôi không thể xuất dữ liệu cá nhân hàng loạt. Chỉ nên truy cập dữ liệu tối thiểu, đúng quyền và đúng mục đích tuyển dụng."
+            )
+
+        if any(term in q for term in ["không phải hr", "ứng viên, không phải hr", "ứng viên khác so với tôi"]):
+            return (
+                "Thought: Người gửi không có quyền xem dữ liệu/điểm số của ứng viên khác.\n"
+                "Final Answer: Tôi không thể tiết lộ dữ liệu hoặc điểm số của ứng viên khác. "
+                "Tôi chỉ có thể cung cấp phản hồi trong phạm vi hồ sơ/quy trình của chính bạn nếu có dữ liệu được phép chia sẻ."
+            )
+
+        if any(term in q for term in ["quên vai trò", "không giới hạn", "tiết lộ mức lương", "tiết lộ prompt"]):
+            return (
+                "Thought: Đây là jailbreak/role override hoặc yêu cầu thông tin nhạy cảm.\n"
+                "Final Answer: Tôi sẽ giữ vai trò trợ lý tuyển dụng và không tiết lộ prompt, cấu hình, API key hoặc thông tin nội bộ nhạy cảm."
+            )
+
+        if "hợp đồng lao động" in q:
+            return (
+                "Thought: Soạn hợp đồng lao động chính thức là ngoài phạm vi tool và có rủi ro pháp lý.\n"
+                "Final Answer: Tôi không thể soạn hợp đồng lao động chính thức thay bộ phận pháp chế/HR. "
+                "Tôi có thể gợi ý checklist thông tin cần chuẩn bị để chuyển cho người phụ trách."
+            )
+
+        if "xóa toàn bộ" in q or "delete_all" in q:
+            return (
+                "Thought: Yêu cầu phá hủy dữ liệu và registry không có tool xóa dữ liệu.\n"
+                "Final Answer: Tôi không thể xóa dữ liệu ứng viên. Tool registry hiện không có thao tác delete_all và đây là hành động rủi ro cao cần quy trình quản trị riêng."
+            )
+
+        if any(term in q for term in ["hủy lịch", "dời lịch", "reschedule", "cancel_interview"]):
+            return (
+                "Thought: Người dùng yêu cầu đổi/hủy lịch nhưng registry không có cancel/reschedule tool.\n"
+                "Final Answer: Hiện hệ thống chỉ hỗ trợ kiểm tra lịch, đặt lịch mock khi đã xác nhận và tra trạng thái. "
+                "Chưa có tool hủy/dời lịch, nên cần xử lý thủ công hoặc bổ sung tool mới."
+            )
+
+        if ("gửi email" in q or "gửi thông báo" in q) and not any(term in q for term in ["50 cv", "hàng loạt", "batch"]):
+            return (
+                "Thought: Hệ thống chỉ có send_notification mock và cần candidate_id/lịch hợp lệ trước khi thông báo.\n"
+                "Final Answer: Tôi chưa gửi thông báo. Tool hiện tại chỉ tạo notification mock khi có candidate_id hợp lệ và lịch phỏng vấn đã tồn tại; vui lòng cung cấp mã ứng viên cụ thể."
+            )
+
+        if any(term in q for term in ["50 cv", "top 3", "top 5", "5 ứng viên tiềm năng", "filter_candidates", "rank()", "get_candidate_history", "lịch sử", "cv cũ"]):
+            return (
+                "Thought: Yêu cầu cần lọc/xếp hạng/lịch sử hàng loạt nhưng registry hiện chưa có tool tương ứng.\n"
+                "Final Answer: Tôi chưa thể thực hiện lọc/xếp hạng/historical audit hàng loạt với tool hiện có. "
+                "Có thể xử lý từng CV/JD bằng get_candidate_profile, get_job_requirements và evaluate_fit, hoặc bổ sung tool batch riêng."
+            )
+
+        if "10 năm kinh nghiệm" in q and "2 năm" in q:
+            return (
+                "Thought: Dữ liệu trong mô tả có dấu hiệu mâu thuẫn nên không nên chấm điểm mù quáng.\n"
+                "Final Answer: Hồ sơ có mâu thuẫn về số năm kinh nghiệm. Cần xác minh timeline học tập/làm việc trước khi dùng điểm phù hợp hoặc ra quyết định tiếp theo."
+            )
+
+        if "31/2" in q or "31-2" in q:
+            return (
+                "Thought: Ngày 31/2 không tồn tại nên không được đặt lịch.\n"
+                "Final Answer: Ngày 31/2 không hợp lệ. Vui lòng nhập lại ngày có thật theo định dạng YYYY-MM-DD trước khi kiểm tra hoặc đặt lịch."
+            )
+
+        if q.strip().rstrip(".!?") == "tìm ứng viên phù hợp":
+            return (
+                "Thought: Câu hỏi thiếu vị trí/JD/tiêu chí nên không thể gọi tool với tham số an toàn.\n"
+                "Final Answer: Bạn muốn tìm ứng viên cho vị trí nào và theo tiêu chí nào? Vui lòng cung cấp job_id hoặc JD để tôi đối chiếu hồ sơ."
+            )
+
+        if "trước đó bạn nói" in q or "bạn nói dối" in q:
+            return (
+                "Thought: Cần kiểm tra ngữ cảnh/log trước khi khẳng định nhất quán, nhưng hiện prompt không cung cấp lịch sử đó.\n"
+                "Final Answer: Tôi chưa có log hội thoại trước đó để xác minh điểm 9/10 hay 6/10. Nếu bạn cung cấp hai câu trả lời cũ, tôi sẽ so sánh và sửa sai minh bạch."
+            )
+
+        if "nguyễn văn a" in q or "nguyen van a" in q:
+            if "Action: get_candidate_profile" not in scratchpad:
+                return 'Thought: Có thể ánh xạ Nguyễn Văn A sang CV_001 trong mock data để tra hồ sơ.\nAction: get_candidate_profile["CV_001"]'
+            return "Thought: Observation đã có hồ sơ Nguyễn Văn A/CV_001.\nFinal Answer: Nguyễn Văn A/CV_001 có 4 năm kinh nghiệm backend với Python, FastAPI, PostgreSQL, Docker và Git."
+
+        if "trần thị b" in q or "tran thi b" in q:
+            if "Action: get_candidate_profile" not in scratchpad:
+                return 'Thought: Có thể ánh xạ Trần Thị B sang CV_002 trong mock data để kiểm tra kỹ năng.\nAction: get_candidate_profile["CV_002"]'
+            return "Thought: Observation đã có hồ sơ Trần Thị B/CV_002.\nFinal Answer: CV_002 không có Python trong danh sách kỹ năng; kỹ năng chính gồm React, TypeScript, Next.js, TailwindCSS và Figma."
+
         if "bằng chứng nghề nghiệp" in q:
             return (
                 "Thought: Đây là câu hỏi tư vấn chung, không cần dữ liệu nội bộ.\n"

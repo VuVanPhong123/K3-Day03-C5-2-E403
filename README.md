@@ -43,6 +43,7 @@ Chạy offline bằng mock provider:
 $env:LLM_PROVIDER="mock"
 python src\app.py
 python src\app.py --mode core-tests
+python src\app.py --mode extended-tests
 python src\app.py --mode cross-audit
 ```
 
@@ -58,6 +59,7 @@ python src\app.py --mode core-tests
 
 - `demo`: chạy một câu baseline và một câu ReAct multi-tool.
 - `core-tests`: chạy 5 acceptance questions trong `config/test_cases.json` qua cả baseline và agent.
+- `extended-tests`: chạy toàn bộ extended cases, gồm 29 test cũ đã khôi phục và 6 guardrail tests.
 - `cross-audit`: chạy các probe guardrail như malformed action, unknown tool, repeated action, max iterations và confirmation gate.
 
 ## Kiểm thử
@@ -73,7 +75,7 @@ python -m unittest discover -s tests -v
 - `src/tools.py`: pure tools + registry schema.
 - `src/prompts.py`: baseline prompt, ReAct protocol, guardrails.
 - `src/providers.py`: multi-provider adapter + `MockProvider` offline.
-- `config/test_cases.json`: 5 core tests và extended guardrail tests.
+- `config/test_cases.json`: 5 core tests, 29 restored original extended tests và 6 extended guardrail tests.
 - `tests/test_agent.py`: unit tests không gọi network.
 - `docs/trace_eval.md`: scoring, trace, RCA, cross-audit.
 - `docs/hybrid_flowchart.mermaid`: sơ đồ hybrid chatbot/agent.

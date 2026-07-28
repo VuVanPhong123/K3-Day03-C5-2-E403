@@ -11,7 +11,11 @@
 
 Kết luận: bài toán phù hợp ReAct Agent cấp 3 hơn baseline chatbot vì cần vừa suy luận vừa gọi tool có kiểm soát.
 
-## 2. Core Test Matrix
+## 2. Test Matrix
+
+`config/test_cases.json` hiện giữ 5 core acceptance cases, khôi phục 29 test case cũ dưới `suite: "extended"` và giữ thêm 6 guardrail extended cases để demo parser/executor safety.
+
+### Core Test Matrix
 
 | Core | Loại | Expected | Kết quả mock |
 | :-- | :-- | :-- | :-- |

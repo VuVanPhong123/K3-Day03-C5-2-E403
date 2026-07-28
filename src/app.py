@@ -349,6 +349,26 @@ def run_core_evaluation(provider=None, verbose: bool = True) -> list[dict[str, A
     return results
 
 
+def run_suite_evaluation(suite: str, provider=None, verbose: bool = True) -> list[dict[str, Any]]:
+    """Run any named test suite through the ReAct agent with isolated bookings."""
+    provider = provider or get_llm_provider()
+    results = []
+    for test in load_test_cases(suite):
+        agent = run_react_agent(
+            test["question"],
+            provider,
+            booked_interviews=copy.deepcopy(BOOKED_INTERVIEWS),
+            verbose=False,
+        )
+        row = {"id": test["id"], "question": test["question"], "agent": agent}
+        results.append(row)
+        if verbose:
+            tools = [step.get("tool_name") for step in agent["steps"] if step.get("tool_name")]
+            print(f"\n[{suite.upper()} {test['id']}] terminated_by={agent['terminated_by']} tools={tools}")
+            print(f"Final: {agent['final_answer']}")
+    return results
+
+
 def run_cross_audit(provider=None) -> list[dict[str, Any]]:
     provider = provider or get_llm_provider()
     probes = [
@@ -363,7 +383,7 @@ def run_cross_audit(provider=None) -> list[dict[str, Any]]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Lab 03 Chatbot vs ReAct Agent demo")
-    parser.add_argument("--mode", choices=["demo", "core-tests", "cross-audit"], default="demo")
+    parser.add_argument("--mode", choices=["demo", "core-tests", "extended-tests", "cross-audit"], default="demo")
     args = parser.parse_args()
 
     print("=" * 58)
@@ -376,6 +396,10 @@ def main() -> None:
 
     if args.mode == "core-tests":
         run_core_evaluation(provider)
+        return
+
+    if args.mode == "extended-tests":
+        run_suite_evaluation("extended", provider)
         return
 
     if args.mode == "cross-audit":
