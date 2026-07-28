@@ -1,45 +1,42 @@
-%% Hybrid Decision Flowchart — Trợ Lý Sàng Lọc Hồ Sơ Tuyển Dụng & Hẹn Phỏng Vấn
-%% Role 5: Phân luồng khi nào đi Chatbot path, khi nào đi ReAct Agent path
-
 flowchart TD
-    START["🧑‍💼 Người dùng HR gửi yêu cầu"] --> CLASSIFY{"🔀 Phân loại yêu cầu"}
+    A[User Query] --> B{Need internal data or action?}
 
-    %% Chatbot Path
-    CLASSIFY -->|"Hỏi đáp chung / Tư vấn lý thuyết"| CHATBOT_PATH["🤖 Chatbot Path"]
-    CHATBOT_PATH --> LLM_CALL["Gọi LLM 1 lần với BASELINE_PROMPT"]
-    LLM_CALL --> CHATBOT_RESPONSE["💬 Trả lời từ kiến thức tĩnh"]
-    CHATBOT_RESPONSE --> END_CHAT["✅ Kết thúc - nhanh, rẻ"]
+    B -- No: general advice --> C[Baseline Chatbot Path]
+    C --> C1[LLM answers from prompt only]
+    C1 --> Z[Final Answer]
 
-    %% Agent Path
-    CLASSIFY -->|"Cần truy xuất DB / Đặt lịch / So khớp CV-JD"| AGENT_PATH["🧠 ReAct Agent Path"]
-    AGENT_PATH --> STEP1["Thought: Xác định thông tin cần thu thập"]
-    STEP1 --> ACTION1["Action: get_candidate_profile / get_job_requirements"]
-    ACTION1 --> OBS1["Observation: Dữ liệu CV + JD từ DB"]
-    OBS1 --> STEP2["Thought: So khớp CV với JD"]
-    STEP2 --> ACTION2["Action: evaluate_fit"]
-    ACTION2 --> OBS2["Observation: Điểm phù hợp + Recommendation"]
+    B -- Yes: CV/JD/schedule/action --> D[ReAct Agent Path]
+    D --> E[Build prompt with tool registry and scratchpad]
+    E --> F[LLM Provider returns Thought + Action or Final Answer]
+    F --> G{Parser result}
 
-    OBS2 --> NEED_SCHEDULE{"Cần đặt lịch PV?"}
-    NEED_SCHEDULE -->|"Không"| FINAL_EVAL["Final Answer: Báo cáo đánh giá"]
-    NEED_SCHEDULE -->|"Có"| ACTION3["Action: check_interview_schedule"]
-    ACTION3 --> OBS3["Observation: Danh sách slot trống"]
-    OBS3 --> ACTION4["Action: schedule_interview"]
-    ACTION4 --> OBS4["Observation: Xác nhận đặt lịch"]
-    OBS4 --> ACTION5["Action: send_notification"]
-    ACTION5 --> OBS5["Observation: Email đã gửi"]
-    OBS5 --> FINAL_FULL["Final Answer: Đánh giá + Lịch PV + Thông báo"]
+    G -- Final Answer --> Z
+    G -- Malformed or missing Action/Final --> H[Add error Observation]
+    H --> I{Reached MAX_ITERATIONS?}
 
-    FINAL_EVAL --> END_AGENT["✅ Kết thúc - có evidence"]
-    FINAL_FULL --> END_AGENT
+    G -- Action parsed --> J{Tool name in registry?}
+    J -- No --> K[Observation: UNKNOWN_TOOL]
+    K --> I
 
-    %% Guardrail Path
-    CLASSIFY -->|"Prompt Injection / PII / Bias / Ngoài phạm vi"| GUARDRAIL["🛡️ Guardrail Path"]
-    GUARDRAIL --> REJECT["Từ chối lịch sự + Nêu giới hạn"]
-    REJECT --> END_GUARD["🚫 Kết thúc - an toàn"]
+    J -- Yes --> L{Repeated same tool + args?}
+    L -- Yes --> M[Observation: REPEATED_ACTION, do not execute twice]
+    M --> I
 
-    %% Error Handling
-    ACTION1 -->|"Tool trả lỗi"| ERROR_HANDLE{"⚠️ Error Handling"}
-    ACTION4 -->|"Slot đã bị đặt"| ERROR_HANDLE
-    ERROR_HANDLE -->|"Còn budget"| STEP1
-    ERROR_HANDLE -->|"Hết budget"| SAFE_FALLBACK["🛡️ Safe Fallback"]
-    SAFE_FALLBACK --> END_AGENT
+    L -- No --> N{Side-effect tool?}
+    N -- schedule_interview --> O{confirmed == true?}
+    O -- No --> P[Observation: NEED_CONFIRMATION, no mutation]
+    O -- Yes --> Q[Validate args and execute mock/in-memory booking]
+
+    N -- read/check/evaluate tool --> R[Validate args and execute pure tool]
+
+    Q --> S[Observation from tool]
+    R --> S
+    P --> S
+
+    S --> T[Append Thought/Action/Observation to scratchpad]
+    T --> I
+    I -- No --> E
+    I -- Yes --> U[Safe fallback answer]
+    U --> Z
+
+    Z --> V[Show answer and trace for demo/evaluation]
