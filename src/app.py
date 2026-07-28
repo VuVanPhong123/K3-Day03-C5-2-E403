@@ -1,101 +1,155 @@
 """
-🚀 CORE AGENT APP (Dành cho Role 4: Core Agent Developer)
-File chính ghép nối tất cả các thành phần: Tools + Prompts + Test Cases + Multi-Provider.
+Core demo app for Lab 03.
+
+Current topic: Recruitment Assistant Agent.
+Phase 2 shows a baseline chatbot path.
+Phase 3 shows a deterministic ReAct-style path using the implemented tools.
 """
 
+import copy
 import json
 import os
 import sys
+
 from dotenv import load_dotenv
 
-# Đảm bảo import các module cùng thư mục src/ hoạt động mượt mà
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-# Đảm bảo in ra Tiếng Việt và Emojis không bị lỗi trên Windows Console
-if sys.stdout.encoding != 'utf-8':
+if sys.stdout.encoding != "utf-8":
     try:
-        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stdout.reconfigure(encoding="utf-8")
     except Exception:
         pass
 
-# Import các thành phần từ file của Role 2, Role 3 & Multi-Provider Adapter
-from tools import AVAILABLE_TOOLS, get_weather, search_flights
-from prompts import CHATBOT_BASELINE_PROMPT, REACT_SYSTEM_PROMPT, MAX_ITERATIONS
+from mock_data import BOOKED_INTERVIEWS, CANDIDATES_DB, INTERVIEW_SCHEDULE, JOBS_DB
+from prompts import CHATBOT_BASELINE_PROMPT, MAX_ITERATIONS
 from providers import get_llm_provider
+from tools import (
+    AVAILABLE_TOOLS,
+    check_interview_schedule,
+    evaluate_fit,
+    get_candidate_profile,
+    get_job_requirements,
+    schedule_interview,
+    send_notification,
+)
 
 load_dotenv()
 
+
 def load_test_cases():
-    """Đọc bộ test cases từ config/test_cases.json của Role 1"""
+    """Load Role 1 test cases from config/test_cases.json."""
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     config_path = os.path.join(base_dir, "config", "test_cases.json")
-    
-    # Fallback kiểm tra nếu file ở thư mục hiện tại
+
     if not os.path.exists(config_path):
         config_path = "test_cases.json"
-        
+
     with open(config_path, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
 def run_baseline_chatbot(user_query: str, provider):
-    """
-    Dựng Chatbot gốc (Baseline) không có công cụ.
-    """
-    print(f"\n💬 [CHATBOT BASELINE] Câu hỏi: {user_query}")
-    print(f"⚙️ System Prompt: {CHATBOT_BASELINE_PROMPT.strip()}")
-    
-    # Gọi LLM Provider thực hiện sinh câu trả lời
+    """Run one baseline LLM generation without tools."""
+    print(f"\n[CHATBOT BASELINE] User query: {user_query}")
     response = provider.generate(user_query, system_prompt=CHATBOT_BASELINE_PROMPT)
-    print(f"🤖 Chatbot trả lời:\n{response}")
+    print(f"[Baseline Answer]\n{response}")
+    return response
 
 
-def run_react_agent(user_query: str, provider):
+def run_react_agent(user_query: str, provider=None):
     """
-    Dựng vòng lặp ReAct Agent (Thought -> Action -> Observation) có Guardrails.
+    Run a small deterministic Phase 3 ReAct demo.
+
+    This is intentionally simple for the lab demo: it uses the real recruitment
+    tools and mock data, but does not yet implement an LLM action parser.
     """
-    print(f"\n🤖 [REACT AGENT] Câu hỏi: {user_query}")
-    step = 0
-    
-    while step < MAX_ITERATIONS:
-        step += 1
-        print(f"\n--- 🔄 Vòng lặp ReAct (Step {step}/{MAX_ITERATIONS}) ---")
-        
-        if step == 1:
-            print("🧠 Thought: Câu hỏi này cần tra cứu thời tiết thời gian thực.")
-            print("🛠️ Action: get_weather['Hà Nội']")
-            
-            # Thực thi tool
-            obs = get_weather("Hà Nội")
-            print(f"👁️ Observation: {obs}")
-            
-        elif step == 2:
-            print("🧠 Thought: Tôi đã có thông tin thời tiết Hà Nội, giờ tôi có thể tư vấn trang phục.")
-            print("🏁 Final Answer: Thời tiết Hà Nội hôm nay 28°C, nắng nhẹ. Bạn nên mặc áo phông thoáng mát!")
-            break
-            
-    if step >= MAX_ITERATIONS:
-        print(f"🛡️ GUARDRAIL TRIGGERED: Đã đạt giới hạn tối đa {MAX_ITERATIONS} bước. Ngắt lặp an toàn!")
+    booked_interviews = copy.deepcopy(BOOKED_INTERVIEWS)
+    candidate_id = "CV_001"
+    job_id = "backend_senior"
+    interview_date = "2026-08-05"
+    interview_time = "09:00"
+
+    print(f"\n[REACT AGENT] User query: {user_query}")
+    print(f"Available tools: {', '.join(AVAILABLE_TOOLS.keys())}")
+
+    step = 1
+    print(f"\n--- ReAct Step {step}/{MAX_ITERATIONS} ---")
+    print("Thought: Need the candidate profile before screening.")
+    print(f"Action: get_candidate_profile[{candidate_id}]")
+    observation = get_candidate_profile(candidate_id, CANDIDATES_DB)
+    print(f"Observation:\n{observation}")
+
+    step += 1
+    print(f"\n--- ReAct Step {step}/{MAX_ITERATIONS} ---")
+    print("Thought: Need the job requirements to compare against the CV.")
+    print(f"Action: get_job_requirements[{job_id}]")
+    observation = get_job_requirements(job_id, JOBS_DB)
+    print(f"Observation:\n{observation}")
+
+    step += 1
+    print(f"\n--- ReAct Step {step}/{MAX_ITERATIONS} ---")
+    print("Thought: Candidate and job data are available, so evaluate fit.")
+    print(f"Action: evaluate_fit[{candidate_id}, {job_id}]")
+    fit_observation = evaluate_fit(candidate_id, job_id, CANDIDATES_DB, JOBS_DB)
+    print(f"Observation:\n{fit_observation}")
+
+    step += 1
+    print(f"\n--- ReAct Step {step}/{MAX_ITERATIONS} ---")
+    print("Thought: Fit is strong enough for a demo interview scheduling step.")
+    print(f"Action: check_interview_schedule[{interview_date}]")
+    schedule_observation = check_interview_schedule(
+        interview_date,
+        INTERVIEW_SCHEDULE,
+        booked_interviews,
+    )
+    print(f"Observation:\n{schedule_observation}")
+
+    print(f"Action: schedule_interview[{candidate_id}, {interview_date}, {interview_time}, {job_id}]")
+    booking_observation = schedule_interview(
+        candidate_id,
+        interview_date,
+        interview_time,
+        job_id,
+        CANDIDATES_DB,
+        INTERVIEW_SCHEDULE,
+        booked_interviews,
+    )
+    print(f"Observation:\n{booking_observation}")
+
+    print(f"Action: send_notification[{candidate_id}, interview_scheduled]")
+    notification_observation = send_notification(
+        candidate_id,
+        "interview_scheduled",
+        CANDIDATES_DB,
+        booked_interviews,
+    )
+    print(f"Observation:\n{notification_observation}")
+
+    print("\nThought: I have candidate data, job data, fit evidence, schedule availability, booking confirmation, and notification status.")
+    print(
+        "Final Answer: CV_001 is a strong match for backend_senior. "
+        "The demo scheduled an interview on 2026-08-05 at 09:00 and generated a notification confirmation."
+    )
 
 
 if __name__ == "__main__":
-    print("==================================================")
-    print("🏫 ĐẠI HỌC VINUNI - BÀI LAB 3: CHATBOT VS REACT AGENT")
-    print("==================================================")
-    
-    # Khởi tạo Multi-Provider LLM Adapter (Đọc từ biến môi trường LLM_PROVIDER)
+    print("=" * 58)
+    print("VINUNI LAB 03 - CHATBOT VS REACT AGENT")
+    print("=" * 58)
+
     provider = get_llm_provider()
     model_name = getattr(provider, "model_name", "Offline Mock Mode")
-    print(f"🔌 LLM Provider đang hoạt động: {provider.__class__.__name__} (Model: {model_name})")
-    
+    print(f"LLM Provider: {provider.__class__.__name__} (Model: {model_name})")
+
     tests = load_test_cases()
-    print(f"✅ Đã tải thành công {len(tests)} Test Cases từ config/test_cases.json\n")
-    
-    # Chạy thử câu test số 3
-    sample_query = tests[2]["question"]
-    
-    print("--- DEMO 1: CHẠY TRÊN CHATBOT BASELINE ---")
-    run_baseline_chatbot(sample_query, provider)
-    
-    print("\n--- DEMO 2: CHẠY TRÊN REACT AGENT ---")
-    run_react_agent(sample_query, provider)
+    print(f"Loaded {len(tests)} test cases from config/test_cases.json")
+
+    baseline_query = tests[1]["question"] if len(tests) > 1 else "CV cua Nguyen Van A co bao nhieu nam kinh nghiem?"
+    react_query = "Danh gia CV_001 cho vi tri backend_senior va demo dat lich phong van."
+
+    print("\n--- DEMO 1: PHASE 2 BASELINE CHATBOT ---")
+    run_baseline_chatbot(baseline_query, provider)
+
+    print("\n--- DEMO 2: PHASE 3 REACT AGENT ---")
+    run_react_agent(react_query, provider)

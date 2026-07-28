@@ -1,7 +1,7 @@
 %% ============================================================
-%% Lab 03 - Hybrid Flowchart
+%% Recruitment Assistant - Hybrid Flowchart
 %% Role 5B: Flowchart Architect
-%% Current scope: Phase 1 -> Phase 3
+%% Current scope: Phase 1 -> Phase 3 demo
 %% ============================================================
 
 %% Source files checked:
@@ -9,18 +9,18 @@
 %% - src/prompts.py
 %% - src/tools.py
 %% - src/providers.py
+%% - src/mock_data.py
 %% - config/test_cases.json
 %%
-%% Important implementation note for Phase 3:
-%% The current ReAct path is a deterministic demo trace in run_react_agent().
-%% It prints Thought/Action/Observation, calls get_weather("Ha Noi"), then prints Final Answer.
-%% It does not yet parse LLM actions dynamically, does not call provider.generate(), and does not use search_flights.
+%% Important Phase 3 note:
+%% The current ReAct path is a deterministic demo in run_react_agent().
+%% It uses real recruitment tools and mock_data.py, but does not yet parse LLM actions dynamically.
 
 flowchart TD
     subgraph P1["Phase 1 - Hybrid Decision Draft"]
-        U1["User Query<br/>config/test_cases.json"] --> D1{"Question type?"}
-        D1 -->|"Simple / knowledge-only"| B1["Baseline Chatbot Path"]
-        D1 -->|"Needs real-time data or tool use"| R1["ReAct Agent Path"]
+        U1["User Query"] --> D1{"Question type?"}
+        D1 -->|"Simple / enough chat context"| B1["Baseline Chatbot"]
+        D1 -->|"Needs CV/JD/schedule data"| R1["ReAct Agent"]
     end
 
     subgraph P2["Phase 2 - Baseline Chatbot Path"]
@@ -33,34 +33,43 @@ flowchart TD
         RBC -.-> BC
     end
 
-    subgraph P3["Phase 3 - ReAct Agent Path (current implementation)"]
-        U3["User Query"] --> RAG["run_react_agent(user_query, provider)<br/>src/app.py"]
-        RAG --> LOOP{"step < MAX_ITERATIONS?<br/>MAX_ITERATIONS = 3"}
+    subgraph P3["Phase 3 - ReAct Agent Demo Path"]
+        U3["Demo Query"] --> RAG["run_react_agent(user_query, provider)<br/>src/app.py"]
+        RAG --> S1["Step 1 Thought<br/>Need candidate evidence"]
+        S1 --> A1["Action<br/>get_candidate_profile[CV_001]"]
+        A1 --> O1["Observation<br/>candidate profile from CANDIDATES_DB"]
 
-        LOOP -->|"Step 1"| TH1["Thought<br/>Need real-time weather lookup"]
-        TH1 --> AC1["Action<br/>get_weather['Ha Noi']"]
-        AC1 --> TOOL1["Tool function<br/>get_weather('Ha Noi')<br/>src/tools.py"]
-        TOOL1 --> OBS1["Observation<br/>weather result or error string"]
-        OBS1 --> LOOP
+        O1 --> S2["Step 2 Thought<br/>Need job requirements"]
+        S2 --> A2["Action<br/>get_job_requirements[backend_senior]"]
+        A2 --> O2["Observation<br/>JD from JOBS_DB"]
 
-        LOOP -->|"Step 2"| TH2["Thought<br/>Weather info is available"]
-        TH2 --> F3["Final Answer<br/>clothing advice"]
+        O2 --> S3["Step 3 Thought<br/>Compare CV with JD"]
+        S3 --> A3["Action<br/>evaluate_fit[CV_001, backend_senior]"]
+        A3 --> O3["Observation<br/>fit score and evidence"]
 
-        LOOP -->|"step reaches limit"| GR["Guardrail<br/>stop after MAX_ITERATIONS"]
+        O3 --> S4["Step 4 Thought<br/>Schedule demo interview"]
+        S4 --> A4["Action<br/>check_interview_schedule[2026-08-05]"]
+        A4 --> O4["Observation<br/>available slots"]
+        O4 --> A5["Action<br/>schedule_interview[CV_001, 2026-08-05, 09:00, backend_senior]"]
+        A5 --> O5["Observation<br/>booking confirmation"]
+        O5 --> A6["Action<br/>send_notification[CV_001, interview_scheduled]"]
+        A6 --> O6["Observation<br/>mock notification status"]
+        O6 --> F3["Final Answer"]
     end
 
     subgraph TR["Tool Registry Snapshot"]
         REG["AVAILABLE_TOOLS<br/>src/tools.py"]
-        REG --> W["get_weather"]
-        REG --> S["search_flights"]
-        TN["Current Phase 3 demo uses get_weather only.<br/>search_flights is registered but not exercised by run_react_agent()."]
-        REG -.-> TN
+        REG --> T1["get_candidate_profile"]
+        REG --> T2["get_job_requirements"]
+        REG --> T3["evaluate_fit"]
+        REG --> T4["check_interview_schedule"]
+        REG --> T5["schedule_interview"]
+        REG --> T6["send_notification"]
+        REG --> T7["get_interview_status"]
     end
 
 %% Phase 3 invariants verified against current source:
-%% - run_react_agent() has a while loop bounded by MAX_ITERATIONS.
-%% - Step 1 prints Thought and Action, then directly calls get_weather("Ha Noi").
-%% - The Observation is the returned string from get_weather().
-%% - Step 2 prints Thought and Final Answer, then breaks.
-%% - The provider parameter and REACT_SYSTEM_PROMPT are not used by the current ReAct implementation.
-%% - There is no dynamic Action Parser yet.
+%% - run_react_agent() uses implemented recruitment tools and mock data.
+%% - Baseline path calls provider.generate() and does not call tools.
+%% - ReAct demo is deterministic and does not yet include a dynamic LLM Action Parser.
+%% - MAX_ITERATIONS is configured in src/prompts.py; current demo prints four major steps.

@@ -1,41 +1,71 @@
 """
-🚀 CẤP ĐỘ 4: AUTONOMOUS AGENT (Agent tự chủ với Planning & Memory)
-Tự chia nhỏ mục tiêu phức tạp thành nhiều bước, duy trì bộ nhớ (Memory) và tự đánh giá tiến độ.
+Level 4: Autonomous Agent Demo.
+
+Shows planning and memory on top of the recruitment workflow.
+This is a conceptual demo, not a full autonomous production agent.
 """
+
+import os
+import sys
+
+if sys.stdout.encoding != "utf-8":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
+SRC_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if SRC_DIR not in sys.path:
+    sys.path.append(SRC_DIR)
+
+from mock_data import BOOKED_INTERVIEWS, CANDIDATES_DB, INTERVIEW_SCHEDULE, JOBS_DB
+from tools import check_interview_schedule, evaluate_fit, schedule_interview
+
 
 class AutonomousGoalAgent:
     def __init__(self, goal: str, max_steps: int = 4):
         self.goal = goal
         self.max_steps = max_steps
-        self.memory = []  # Bộ nhớ lưu vết các bước đã thực hiện
-        
-    def execute(self):
-        print(f"🚀 === Bắt đầu Autonomous Goal: {self.goal} ===")
-        
-        for step in range(1, self.max_steps + 1):
-            print(f"\n--- Vòng lặp tự chủ Planning & Action (Step {step}/{self.max_steps}) ---")
-            
-            if step == 1:
-                plan = "Bước 1: Tra cứu lịch rảnh và thời tiết điểm đến"
-                action = "Call Tool: get_weather('Hà Nội')"
-                result = "Hà Nội 28°C, nắng nhẹ."
-            elif step == 2:
-                plan = "Bước 2: Tìm chuyến bay phù hợp với ngân sách"
-                action = "Call Tool: search_flights('TP.HCM', 'Hà Nội')"
-                result = "Chuyến bay VN123 giá 1.500.000 VNĐ."
-            elif step == 3:
-                plan = "Bước 3: Tổng hợp lập lịch trình 3 ngày 2 đêm"
-                action = "Generate Itinerary"
-                result = "Lịch trình hoàn tất: Khách sạn + Quán cafe sống ảo."
-            else:
-                print("🎯 [Goal Evaluation]: Mục tiêu đã hoàn thành 100%!")
-                break
-                
-            self.memory.append({"step": step, "plan": plan, "result": result})
-            print(f"📋 [Planning]: {plan}")
-            print(f"🛠️ [Execution]: {action} ➔ {result}")
-            print(f"💾 [Memory Saved]: Logged step {step} to memory.")
+        self.memory = []
+
+    def remember(self, step: int, plan: str, result: str) -> None:
+        self.memory.append({"step": step, "plan": plan, "result": result})
+
+    def execute(self) -> None:
+        print(f"=== AUTONOMOUS GOAL: {self.goal} ===")
+
+        candidate_id = "CV_001"
+        job_id = "backend_senior"
+        date = "2026-08-05"
+        time = "09:00"
+        booked = dict(BOOKED_INTERVIEWS)
+
+        print(f"\n--- Planning Step 1/{self.max_steps} ---")
+        plan = "Evaluate candidate fit."
+        result = evaluate_fit(candidate_id, job_id, CANDIDATES_DB, JOBS_DB)
+        self.remember(1, plan, result)
+        print(f"Plan  : {plan}")
+        print(f"Result:\n{result}")
+
+        print(f"\n--- Planning Step 2/{self.max_steps} ---")
+        plan = "Check interview availability."
+        result = check_interview_schedule(date, INTERVIEW_SCHEDULE, booked)
+        self.remember(2, plan, result)
+        print(f"Plan  : {plan}")
+        print(f"Result:\n{result}")
+
+        print(f"\n--- Planning Step 3/{self.max_steps} ---")
+        plan = "Schedule interview for the selected slot."
+        result = schedule_interview(candidate_id, date, time, job_id, CANDIDATES_DB, INTERVIEW_SCHEDULE, booked)
+        self.remember(3, plan, result)
+        print(f"Plan  : {plan}")
+        print(f"Result:\n{result}")
+
+        print(f"\n--- Evaluation Step 4/{self.max_steps} ---")
+        print(f"Memory entries: {len(self.memory)}")
+        print("Goal evaluation: demo workflow completed.")
+
 
 if __name__ == "__main__":
-    agent = AutonomousGoalAgent("Lên kế hoạch du lịch Hà Nội 3 ngày 2 đêm")
+    agent = AutonomousGoalAgent("Screen CV_001 and schedule a demo interview.")
     agent.execute()

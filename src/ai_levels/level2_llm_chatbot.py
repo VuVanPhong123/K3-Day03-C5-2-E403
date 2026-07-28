@@ -1,22 +1,39 @@
 """
-🤖 CẤP ĐỘ 2: LLM CHATBOT (Baseline Chatbot không có Tool)
-Dùng LLM sinh câu trả lời tự nhiên mượt mà, nhưng không thể truy cập dữ liệu thời gian thực.
+Level 2: LLM Chatbot Baseline.
+
+Uses natural-language style answers but has no tool access.
+This file is an offline demo so it can run without an API key.
 """
 
-CHATBOT_BASELINE_PROMPT = """Bạn là một Chatbot tư vấn thông thường.
-Hãy trả lời câu hỏi của người dùng một cách thân thiện dựa trên kiến thức có sẵn.
-Nếu không biết thông tin thực tế thời gian thực, hãy thông báo lịch sự cho người dùng.
+import sys
+
+if sys.stdout.encoding != "utf-8":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
+
+CHATBOT_BASELINE_PROMPT = """You are a recruitment assistant in baseline chatbot mode.
+You can only answer from information provided in the conversation.
+You cannot read real CV files, access ATS data, check calendars, or send emails.
 """
+
 
 def llm_chatbot(user_input: str) -> str:
     text = user_input.lower()
-    if "thời tiết" in text or "vé máy bay" in text:
-        return "🤖 [LLM Chatbot]: Tôi là AI hội thoại nhưng không được cấp công cụ tra cứu dữ liệu thời gian thực, nên tôi không biết chính xác thời tiết/giá vé hôm nay!"
-    else:
-        return f"🤖 [LLM Chatbot]: Rất vui được hỗ trợ bạn về câu hỏi '{user_input}'!"
+
+    if "cv" in text or "ung vien" in text or "phong van" in text:
+        return (
+            "[LLM Chatbot Baseline]: Toi co the ho tro tom tat/danh gia neu ban dan CV va JD vao chat. "
+            "Hien tai toi khong co tool de doc he thong ATS hay kiem tra lich that."
+        )
+
+    return f"[LLM Chatbot Baseline]: Toi se tra loi than thien dua tren kien thuc co san cho cau hoi: {user_input}"
+
 
 if __name__ == "__main__":
-    print("=== DEMO CẤP ĐỘ 2: LLM CHATBOT BASELINE ===")
-    q = "Thời tiết Hà Nội hôm nay thế nào?"
-    print(f"User: {q}")
-    print(f"Bot : {llm_chatbot(q)}")
+    print("=== DEMO LEVEL 2: LLM CHATBOT BASELINE ===")
+    query = "CV cua Nguyen Van A co bao nhieu nam kinh nghiem?"
+    print(f"User: {query}")
+    print(f"Bot : {llm_chatbot(query)}")
