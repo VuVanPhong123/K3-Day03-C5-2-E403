@@ -5,7 +5,7 @@ duration: 240
 author: "VinUni AI Codelab × GDGoC"
 updated: "2026-07-27"
 category: "AI Agent"
-description: "Xây dựng Chatbot baseline, thiết kế Tool Specs, lắp ReAct Agent Loop với Guardrails và đánh giá so sánh trên bộ 5 Test Cases thực tế ."
+description: "Xây dựng Chatbot baseline, thiết kế Tool Specs, lắp ReAct Agent Loop với Guardrails và đánh giá so sánh trên bộ Test Cases thực tế."
 published: true
 collection: "codelabs"
 format: "steps"
@@ -323,7 +323,7 @@ Phát hiện một failed trace (lỗi lặp vô hạn, gọi sai tên tool, nh�
 Chạy bộ Test Cases trên cả Chatbot Baseline và ReAct Agent, hoàn thiện báo cáo docs/trace_eval.md và push code sạch lên GitHub.
 :::
 
-### Bộ 5 Test Cases gợi ý (`config/test_cases.json`)
+### Bộ Test Cases gợi ý (`config/test_cases.json`)
 
 |      #      | Loại câu hỏi                   | Mục đích kiểm tra                     | Kỳ vọng ở Agent                                          |
 | :---------: | :-------------------------------- | :---------------------------------------- | :---------------------------------------------------------- |
