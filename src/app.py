@@ -133,6 +133,46 @@ def run_react_agent(user_query: str, provider=None):
     )
 
 
+def run_full_baseline_eval(provider):
+    """Chạy ALL test cases qua Chatbot Baseline và lưu kết quả."""
+    import time
+
+    tests = load_test_cases()
+    print(f"\n📊 FULL BASELINE EVAL: {len(tests)} test cases")
+    print("=" * 60)
+
+    results = []
+    for tc in tests:
+        tid = tc["id"]
+        print(f"\n--- TEST #{tid} [{tc['category']}] ---")
+        print(f"❓ {tc['question'][:100]}")
+
+        try:
+            resp = provider.generate(tc["question"], system_prompt=CHATBOT_BASELINE_PROMPT)
+        except Exception as e:
+            resp = f"[ERROR]: {e}"
+
+        short = resp[:150].replace("\n", " ") + ("..." if len(resp) > 150 else "")
+        print(f"🤖 {short}")
+
+        results.append({
+            "id": tid,
+            "category": tc["category"],
+            "question": tc["question"],
+            "expected": tc["expected_behavior"],
+            "baseline_response": resp,
+        })
+        time.sleep(0.3)
+
+    # Lưu kết quả ra file JSON
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    out_path = os.path.join(base_dir, "docs", "eval_results.json")
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(results, f, ensure_ascii=False, indent=2)
+    print(f"\n✅ Saved {len(results)} results → docs/eval_results.json")
+    return results
+
+
 if __name__ == "__main__":
     print("=" * 58)
     print("VINUNI LAB 03 - CHATBOT VS REACT AGENT")
@@ -145,11 +185,15 @@ if __name__ == "__main__":
     tests = load_test_cases()
     print(f"Loaded {len(tests)} test cases from config/test_cases.json")
 
-    baseline_query = tests[1]["question"] if len(tests) > 1 else "CV cua Nguyen Van A co bao nhieu nam kinh nghiem?"
+    # --- PHASE 2: Chạy tất cả test cases qua Chatbot Baseline ---
+    print("\n" + "=" * 58)
+    print("PHASE 2: FULL BASELINE CHATBOT EVALUATION")
+    print("=" * 58)
+    run_full_baseline_eval(provider)
+
+    # --- PHASE 3: Demo ReAct Agent ---
     react_query = "Danh gia CV_001 cho vi tri backend_senior va demo dat lich phong van."
-
-    print("\n--- DEMO 1: PHASE 2 BASELINE CHATBOT ---")
-    run_baseline_chatbot(baseline_query, provider)
-
-    print("\n--- DEMO 2: PHASE 3 REACT AGENT ---")
+    print("\n" + "=" * 58)
+    print("PHASE 3: REACT AGENT DEMO")
+    print("=" * 58)
     run_react_agent(react_query, provider)

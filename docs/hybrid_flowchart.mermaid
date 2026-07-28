@@ -1,75 +1,45 @@
-%% ============================================================
-%% Recruitment Assistant - Hybrid Flowchart
-%% Role 5B: Flowchart Architect
-%% Current scope: Phase 1 -> Phase 3 demo
-%% ============================================================
-
-%% Source files checked:
-%% - src/app.py
-%% - src/prompts.py
-%% - src/tools.py
-%% - src/providers.py
-%% - src/mock_data.py
-%% - config/test_cases.json
-%%
-%% Important Phase 3 note:
-%% The current ReAct path is a deterministic demo in run_react_agent().
-%% It uses real recruitment tools and mock_data.py, but does not yet parse LLM actions dynamically.
+%% Hybrid Decision Flowchart — Trợ Lý Sàng Lọc Hồ Sơ Tuyển Dụng & Hẹn Phỏng Vấn
+%% Role 5: Phân luồng khi nào đi Chatbot path, khi nào đi ReAct Agent path
 
 flowchart TD
-    subgraph P1["Phase 1 - Hybrid Decision Draft"]
-        U1["User Query"] --> D1{"Question type?"}
-        D1 -->|"Simple / enough chat context"| B1["Baseline Chatbot"]
-        D1 -->|"Needs CV/JD/schedule data"| R1["ReAct Agent"]
-    end
+    START["🧑‍💼 Người dùng HR gửi yêu cầu"] --> CLASSIFY{"🔀 Phân loại yêu cầu"}
 
-    subgraph P2["Phase 2 - Baseline Chatbot Path"]
-        U2["User Query"] --> RBC["run_baseline_chatbot(user_query, provider)<br/>src/app.py"]
-        RBC --> BP["CHATBOT_BASELINE_PROMPT<br/>src/prompts.py"]
-        BP --> LLM2["LLM Provider<br/>provider.generate(...)<br/>src/providers.py"]
-        LLM2 --> F2["Final Answer"]
+    %% Chatbot Path
+    CLASSIFY -->|"Hỏi đáp chung / Tư vấn lý thuyết"| CHATBOT_PATH["🤖 Chatbot Path"]
+    CHATBOT_PATH --> LLM_CALL["Gọi LLM 1 lần với BASELINE_PROMPT"]
+    LLM_CALL --> CHATBOT_RESPONSE["💬 Trả lời từ kiến thức tĩnh"]
+    CHATBOT_RESPONSE --> END_CHAT["✅ Kết thúc - nhanh, rẻ"]
 
-        BC["Baseline constraints<br/>Tool calls: 0<br/>Action: none<br/>Observation: none<br/>ReAct loop: none"]
-        RBC -.-> BC
-    end
+    %% Agent Path
+    CLASSIFY -->|"Cần truy xuất DB / Đặt lịch / So khớp CV-JD"| AGENT_PATH["🧠 ReAct Agent Path"]
+    AGENT_PATH --> STEP1["Thought: Xác định thông tin cần thu thập"]
+    STEP1 --> ACTION1["Action: get_candidate_profile / get_job_requirements"]
+    ACTION1 --> OBS1["Observation: Dữ liệu CV + JD từ DB"]
+    OBS1 --> STEP2["Thought: So khớp CV với JD"]
+    STEP2 --> ACTION2["Action: evaluate_fit"]
+    ACTION2 --> OBS2["Observation: Điểm phù hợp + Recommendation"]
 
-    subgraph P3["Phase 3 - ReAct Agent Demo Path"]
-        U3["Demo Query"] --> RAG["run_react_agent(user_query, provider)<br/>src/app.py"]
-        RAG --> S1["Step 1 Thought<br/>Need candidate evidence"]
-        S1 --> A1["Action<br/>get_candidate_profile[CV_001]"]
-        A1 --> O1["Observation<br/>candidate profile from CANDIDATES_DB"]
+    OBS2 --> NEED_SCHEDULE{"Cần đặt lịch PV?"}
+    NEED_SCHEDULE -->|"Không"| FINAL_EVAL["Final Answer: Báo cáo đánh giá"]
+    NEED_SCHEDULE -->|"Có"| ACTION3["Action: check_interview_schedule"]
+    ACTION3 --> OBS3["Observation: Danh sách slot trống"]
+    OBS3 --> ACTION4["Action: schedule_interview"]
+    ACTION4 --> OBS4["Observation: Xác nhận đặt lịch"]
+    OBS4 --> ACTION5["Action: send_notification"]
+    ACTION5 --> OBS5["Observation: Email đã gửi"]
+    OBS5 --> FINAL_FULL["Final Answer: Đánh giá + Lịch PV + Thông báo"]
 
-        O1 --> S2["Step 2 Thought<br/>Need job requirements"]
-        S2 --> A2["Action<br/>get_job_requirements[backend_senior]"]
-        A2 --> O2["Observation<br/>JD from JOBS_DB"]
+    FINAL_EVAL --> END_AGENT["✅ Kết thúc - có evidence"]
+    FINAL_FULL --> END_AGENT
 
-        O2 --> S3["Step 3 Thought<br/>Compare CV with JD"]
-        S3 --> A3["Action<br/>evaluate_fit[CV_001, backend_senior]"]
-        A3 --> O3["Observation<br/>fit score and evidence"]
+    %% Guardrail Path
+    CLASSIFY -->|"Prompt Injection / PII / Bias / Ngoài phạm vi"| GUARDRAIL["🛡️ Guardrail Path"]
+    GUARDRAIL --> REJECT["Từ chối lịch sự + Nêu giới hạn"]
+    REJECT --> END_GUARD["🚫 Kết thúc - an toàn"]
 
-        O3 --> S4["Step 4 Thought<br/>Schedule demo interview"]
-        S4 --> A4["Action<br/>check_interview_schedule[2026-08-05]"]
-        A4 --> O4["Observation<br/>available slots"]
-        O4 --> A5["Action<br/>schedule_interview[CV_001, 2026-08-05, 09:00, backend_senior]"]
-        A5 --> O5["Observation<br/>booking confirmation"]
-        O5 --> A6["Action<br/>send_notification[CV_001, interview_scheduled]"]
-        A6 --> O6["Observation<br/>mock notification status"]
-        O6 --> F3["Final Answer"]
-    end
-
-    subgraph TR["Tool Registry Snapshot"]
-        REG["AVAILABLE_TOOLS<br/>src/tools.py"]
-        REG --> T1["get_candidate_profile"]
-        REG --> T2["get_job_requirements"]
-        REG --> T3["evaluate_fit"]
-        REG --> T4["check_interview_schedule"]
-        REG --> T5["schedule_interview"]
-        REG --> T6["send_notification"]
-        REG --> T7["get_interview_status"]
-    end
-
-%% Phase 3 invariants verified against current source:
-%% - run_react_agent() uses implemented recruitment tools and mock data.
-%% - Baseline path calls provider.generate() and does not call tools.
-%% - ReAct demo is deterministic and does not yet include a dynamic LLM Action Parser.
-%% - MAX_ITERATIONS is configured in src/prompts.py; current demo prints four major steps.
+    %% Error Handling
+    ACTION1 -->|"Tool trả lỗi"| ERROR_HANDLE{"⚠️ Error Handling"}
+    ACTION4 -->|"Slot đã bị đặt"| ERROR_HANDLE
+    ERROR_HANDLE -->|"Còn budget"| STEP1
+    ERROR_HANDLE -->|"Hết budget"| SAFE_FALLBACK["🛡️ Safe Fallback"]
+    SAFE_FALLBACK --> END_AGENT
