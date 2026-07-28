@@ -55,8 +55,8 @@ class AutonomousGoalAgent:
         print(f"Result:\n{result}")
 
         print(f"\n--- Planning Step 3/{self.max_steps} ---")
-        plan = "Schedule interview for the selected slot."
-        result = schedule_interview(candidate_id, date, time, job_id, CANDIDATES_DB, INTERVIEW_SCHEDULE, booked)
+        plan = "Schedule interview for the selected slot after explicit demo confirmation."
+        result = schedule_interview(candidate_id, date, time, job_id, True, CANDIDATES_DB, INTERVIEW_SCHEDULE, booked)
         self.remember(3, plan, result)
         print(f"Plan  : {plan}")
         print(f"Result:\n{result}")
