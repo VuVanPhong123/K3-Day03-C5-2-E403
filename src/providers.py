@@ -45,8 +45,10 @@ class GeminiProvider(BaseLLMProvider):
             )
             if response and hasattr(response, 'text') and response.text:
                 return response.text
-        except Exception:
-            pass
+        except Exception as e:
+            if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e) or "quota" in str(e).lower():
+                print("\n⚠️ [Gemini API 429 - Quota Exceeded]: Tự động chuyển sang Offline Mock Provider!")
+                return MockProvider().generate(prompt, system_prompt)
 
         # Direct REST API Call (Dependency-free)
         try:

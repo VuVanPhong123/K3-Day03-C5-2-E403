@@ -1,111 +1,117 @@
 """
-🗄️ MOCK DATABASE CHO HỆ THỐNG TUYỂN DỤNG & PHỎNG VẤN
-Dữ liệu mẫu phục vụ kiểm thử cho 15 Test Cases.
+📦 MOCK DATA (Nguồn dữ liệu giả lập cho Chủ đề 9: Sàng Lọc Hồ Sơ Tuyển Dụng & Hẹn Phỏng Vấn)
+
+Chỉ chứa DATA thuần túy. Không chứa logic.
+app.py sẽ import các biến này rồi TRUYỀN (Dependency Injection) vào các hàm trong tools.py,
+tools.py không được import trực tiếp từ file này.
 """
+
+from datetime import date
+
+# ============================================================================
+# CANDIDATES_DB - Hồ sơ ứng viên
+# ============================================================================
 
 CANDIDATES_DB = {
     "CV_001": {
         "name": "Nguyễn Văn A",
         "email": "nguyenvana@email.com",
-        "position": "Backend Developer",
-        "skills": ["Python", "FastAPI", "PostgreSQL", "Docker", "REST API"],
-        "experience_years": 3,
-        "education": "Đại học Bách Khoa (Tốt nghiệp 2021)",
-        "summary": "Lập trình viên Backend 3 năm kinh nghiệm phát triển RESTful API với Python & FastAPI."
+        "phone": "0901234567",
+        "skills": ["Python", "FastAPI", "PostgreSQL", "Docker", "Git"],
+        "experience_years": 4,
+        "education": "Đại học Bách Khoa TP.HCM - Kỹ sư CNTT",
+        "applied_job_id": "backend_senior",
+        "cv_summary": "4 năm kinh nghiệm phát triển backend với Python/FastAPI, "
+                       "từng xây dựng hệ thống microservices xử lý 1M+ request/ngày.",
     },
     "CV_002": {
         "name": "Trần Thị B",
         "email": "tranthib@email.com",
-        "position": "Frontend Lead",
-        "skills": ["React", "TypeScript", "Next.js", "Tailwind CSS", "Redux"],
+        "phone": "0912345678",
+        "skills": ["React", "TypeScript", "Next.js", "TailwindCSS", "Figma"],
         "experience_years": 5,
-        "education": "Đại học Công nghệ (Tốt nghiệp 2019)",
-        "summary": "Frontend Lead với 5 năm kinh nghiệm làm việc với React và TypeScript."
+        "education": "Đại học Khoa học Tự nhiên - Cử nhân CNTT",
+        "applied_job_id": "frontend_lead",
+        "cv_summary": "5 năm kinh nghiệm frontend, từng dẫn dắt team 4 người xây dựng "
+                       "hệ thống dashboard cho doanh nghiệp fintech.",
     },
     "CV_003": {
         "name": "Lê Văn C",
         "email": "levanc@email.com",
-        "position": "Backend Developer",
-        "skills": ["Java", "Spring Boot", "PostgreSQL", "Docker", "Microservices"],
-        "experience_years": 4,
-        "education": "Đại học Bách Khoa (Tốt nghiệp 2020)",
-        "summary": "Backend Engineer chuyên Java Spring Boot và hệ thống Microservices."
-    },
-    "CV_004": {
-        "name": "Phạm Văn D",
-        "email": "phamvand@email.com",
-        "position": "Data Analyst",
-        "skills": ["Python", "SQL", "Tableau", "PowerBI", "Pandas"],
+        "phone": "0923456789",
+        "skills": ["AWS", "Kubernetes", "Terraform", "CI/CD", "Linux"],
         "experience_years": 2,
-        "education": "Đại học Kinh tế Quốc dân (Tốt nghiệp 2022)",
-        "summary": "Data Analyst 2 năm kinh nghiệm trực quan hóa dữ liệu và xây dựng dashboard."
+        "education": "Cao đẳng FPT Polytechnic - CNTT",
+        "applied_job_id": "devops_engineer",
+        "cv_summary": "2 năm kinh nghiệm vận hành hạ tầng cloud AWS, triển khai "
+                       "pipeline CI/CD tự động cho 10+ dự án.",
     },
-    "CV_005": {
-        "name": "Hoàng Văn E",
-        "email": "hoangvane@email.com",
-        "position": "Senior Backend Engineer",
-        "skills": ["Java", "Spring Boot", "Microservices", "Kafka", "Kubernetes", "Redis"],
-        "experience_years": 5,
-        "education": "Đại học Bách Khoa (Tốt nghiệp 2020)",
-        "summary": "Senior Java Developer có 5 năm kinh nghiệm làm việc với hệ thống lớn."
-    },
-    "CV_006": {
-        "name": "Nguyễn Thị F",
-        "email": "nguyenthif@email.com",
-        "position": "Backend Developer",
-        "skills": ["Java", "Spring Boot", "MySQL", "Docker"],
-        "experience_years": 3,
-        "education": "Đại học Bách Khoa (Tốt nghiệp 2021)",
-        "summary": "Java Developer 3 năm kinh nghiệm."
-    }
 }
+
+
+# ============================================================================
+# JOBS_DB - Yêu cầu vị trí tuyển dụng
+# ============================================================================
 
 JOBS_DB = {
     "backend_senior": {
         "title": "Senior Backend Engineer",
         "department": "Engineering",
-        "required_skills": ["Python", "FastAPI", "PostgreSQL", "Docker"],
+        "required_skills": ["Python", "FastAPI", "PostgreSQL", "Docker", "Redis"],
         "experience_min": 3,
-        "description": "Phát triển và tối ưu hóa hệ thống backend microservices."
-    },
-    "backend_java_senior": {
-        "title": "Senior Java Backend Engineer",
-        "department": "Engineering",
-        "required_skills": ["Java", "Spring Boot", "PostgreSQL", "Microservices"],
-        "experience_min": 3,
-        "description": "Xây dựng các ứng dụng Java Enterprise."
+        "salary_range": "25,000,000 - 40,000,000 VNĐ",
+        "location": "TP.HCM (Hybrid)",
+        "description": "Xây dựng và tối ưu hệ thống backend quy mô lớn, thiết kế API "
+                        "và làm việc với microservices.",
     },
     "frontend_lead": {
         "title": "Frontend Lead",
         "department": "Engineering",
-        "required_skills": ["React", "TypeScript", "Next.js"],
+        "required_skills": ["React", "TypeScript", "Next.js", "TailwindCSS"],
         "experience_min": 4,
-        "description": "Dẫn dắt đội ngũ Frontend phát triển sản phẩm Web App."
+        "salary_range": "30,000,000 - 45,000,000 VNĐ",
+        "location": "Hà Nội (Onsite)",
+        "description": "Dẫn dắt đội ngũ frontend, xây dựng hệ thống UI component "
+                        "và định hướng kiến trúc frontend.",
     },
-    "data_analyst": {
-        "title": "Data Analyst",
-        "department": "Data Science",
-        "required_skills": ["Python", "SQL", "Tableau"],
+    "devops_engineer": {
+        "title": "DevOps Engineer",
+        "department": "Infrastructure",
+        "required_skills": ["AWS", "Kubernetes", "Terraform", "CI/CD", "Docker"],
         "experience_min": 2,
-        "description": "Phân tích dữ liệu kinh doanh và báo cáo cho ban quản trị."
-    }
+        "salary_range": "20,000,000 - 32,000,000 VNĐ",
+        "location": "TP.HCM (Remote)",
+        "description": "Quản lý hạ tầng cloud, xây dựng pipeline CI/CD, đảm bảo "
+                        "uptime và bảo mật hệ thống.",
+    },
 }
 
+
+# ============================================================================
+# INTERVIEW_SCHEDULE - Các slot phỏng vấn khả dụng theo ngày
+# (Dùng ngày tương lai cố định để tránh lệch so với "today" khi chạy thực tế)
+# ============================================================================
+
 INTERVIEW_SCHEDULE = {
-    "2026-08-04": ["09:00", "10:00", "14:00", "15:00"],
-    "2026-08-05": ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"],
-    "2026-08-06": ["09:00", "10:00", "14:00", "15:00"],
-    "2026-08-11": ["09:00", "10:00", "11:00", "14:00", "15:00"]
+    "2026-08-05": ["09:00", "10:00", "14:00", "15:00"],
+    "2026-08-06": ["09:00", "11:00", "13:30", "16:00"],
+    "2026-08-07": ["10:00", "14:00", "15:30"],
 }
+
+
+# ============================================================================
+# BOOKED_INTERVIEWS - Lịch đã đặt (dict rỗng ban đầu, sẽ được cập nhật khi
+# schedule_interview() chạy trong phiên làm việc của app.py)
+# ============================================================================
 
 BOOKED_INTERVIEWS = {
     "INT_001": {
-        "candidate_id": "CV_001",
-        "candidate_name": "Nguyễn Văn A",
+        "candidate_id": "CV_002",
+        "candidate_name": "Trần Thị B",
+        "candidate_email": "tranthib@email.com",
+        "job_id": "frontend_lead",
         "date": "2026-08-05",
-        "time": "09:00",
-        "job_id": "backend_senior",
+        "time": "10:00",
         "status": "confirmed",
-        "booked_at": "2026-07-28T09:00:00"
-    }
+    },
 }

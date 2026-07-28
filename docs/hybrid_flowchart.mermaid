@@ -1,0 +1,66 @@
+%% ============================================================
+%% Lab 03 - Hybrid Flowchart
+%% Role 5B: Flowchart Architect
+%% Current scope: Phase 1 -> Phase 3
+%% ============================================================
+
+%% Source files checked:
+%% - src/app.py
+%% - src/prompts.py
+%% - src/tools.py
+%% - src/providers.py
+%% - config/test_cases.json
+%%
+%% Important implementation note for Phase 3:
+%% The current ReAct path is a deterministic demo trace in run_react_agent().
+%% It prints Thought/Action/Observation, calls get_weather("Ha Noi"), then prints Final Answer.
+%% It does not yet parse LLM actions dynamically, does not call provider.generate(), and does not use search_flights.
+
+flowchart TD
+    subgraph P1["Phase 1 - Hybrid Decision Draft"]
+        U1["User Query<br/>config/test_cases.json"] --> D1{"Question type?"}
+        D1 -->|"Simple / knowledge-only"| B1["Baseline Chatbot Path"]
+        D1 -->|"Needs real-time data or tool use"| R1["ReAct Agent Path"]
+    end
+
+    subgraph P2["Phase 2 - Baseline Chatbot Path"]
+        U2["User Query"] --> RBC["run_baseline_chatbot(user_query, provider)<br/>src/app.py"]
+        RBC --> BP["CHATBOT_BASELINE_PROMPT<br/>src/prompts.py"]
+        BP --> LLM2["LLM Provider<br/>provider.generate(...)<br/>src/providers.py"]
+        LLM2 --> F2["Final Answer"]
+
+        BC["Baseline constraints<br/>Tool calls: 0<br/>Action: none<br/>Observation: none<br/>ReAct loop: none"]
+        RBC -.-> BC
+    end
+
+    subgraph P3["Phase 3 - ReAct Agent Path (current implementation)"]
+        U3["User Query"] --> RAG["run_react_agent(user_query, provider)<br/>src/app.py"]
+        RAG --> LOOP{"step < MAX_ITERATIONS?<br/>MAX_ITERATIONS = 3"}
+
+        LOOP -->|"Step 1"| TH1["Thought<br/>Need real-time weather lookup"]
+        TH1 --> AC1["Action<br/>get_weather['Ha Noi']"]
+        AC1 --> TOOL1["Tool function<br/>get_weather('Ha Noi')<br/>src/tools.py"]
+        TOOL1 --> OBS1["Observation<br/>weather result or error string"]
+        OBS1 --> LOOP
+
+        LOOP -->|"Step 2"| TH2["Thought<br/>Weather info is available"]
+        TH2 --> F3["Final Answer<br/>clothing advice"]
+
+        LOOP -->|"step reaches limit"| GR["Guardrail<br/>stop after MAX_ITERATIONS"]
+    end
+
+    subgraph TR["Tool Registry Snapshot"]
+        REG["AVAILABLE_TOOLS<br/>src/tools.py"]
+        REG --> W["get_weather"]
+        REG --> S["search_flights"]
+        TN["Current Phase 3 demo uses get_weather only.<br/>search_flights is registered but not exercised by run_react_agent()."]
+        REG -.-> TN
+    end
+
+%% Phase 3 invariants verified against current source:
+%% - run_react_agent() has a while loop bounded by MAX_ITERATIONS.
+%% - Step 1 prints Thought and Action, then directly calls get_weather("Ha Noi").
+%% - The Observation is the returned string from get_weather().
+%% - Step 2 prints Thought and Final Answer, then breaks.
+%% - The provider parameter and REACT_SYSTEM_PROMPT are not used by the current ReAct implementation.
+%% - There is no dynamic Action Parser yet.

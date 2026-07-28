@@ -1,3 +1,15 @@
+# Nhóm C5-2
+
+| Thành viên | MSSV |
+| :-- | :-- |
+| Phạm Sỹ Đức | 2A202601601 |
+| Hoàng Lê Minh | 2A202601653 |
+| Hà Duy Anh | 2A202601511 |
+| Nguyễn Quang Vinh | 2A202601517 |
+| Đoàn Nhật Nam | 2A202601123 |
+
+---
+
 # 🏫 BÀI LAB 3: CHATBOT VS REACT AGENT - TỪ Ý TƯỞNG ĐẾN THỰC THI
 
 ---
