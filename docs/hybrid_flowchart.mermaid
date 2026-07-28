@@ -1,0 +1,49 @@
+%% ============================================================
+%% Recruitment Assistant - Hybrid Architecture Draft
+%% Role 5B: Flowchart Architect
+%% Owner: Phong
+%% ============================================================
+
+%% Phase 1 - High-level architecture draft
+%% Topic: Recruitment Assistant Agent.
+%% The ReAct branch below is planned architecture only.
+%% Planned recruitment tools must be validated and updated in Phase 3 after implementation is complete.
+%% Do not read this diagram as a claim that CV/JD/interview scheduling tools are already implemented.
+
+flowchart TD
+    subgraph P1["Phase 1 - Recruitment Assistant Architecture Draft"]
+        U1["User Query"] --> A1["Recruitment Assistant"]
+        A1 -->|"Simple/general question"| B1["Baseline Chatbot"]
+        A1 -->|"Needs recruitment data/action"| R1["ReAct Agent (planned)"]
+
+        R1 --> L1["LLM"]
+        L1 --> TA1["Thought / Action"]
+        TA1 --> AP1["Action Parser"]
+        AP1 --> TR1["Tool Registry"]
+        TR1 --> JR1["get_job_requirements (planned)"]
+        TR1 --> CP1["get_candidate_profile (planned)"]
+        TR1 --> FS1["find_interview_slots (planned)"]
+        TR1 --> SI1["schedule_interview (planned)"]
+        JR1 --> O1["Observation"]
+        CP1 --> O1
+        FS1 --> O1
+        SI1 --> O1
+        O1 --> L1
+        L1 -->|"Enough information"| F1["Final Answer"]
+    end
+
+    subgraph P2["Phase 2 - Baseline Chatbot Path (current implementation)"]
+        U2["User Query"] --> RBC["run_baseline_chatbot(user_query, provider)<br/>src/app.py"]
+        RBC --> PROMPT["CHATBOT_BASELINE_PROMPT<br/>src/prompts.py"]
+        PROMPT --> PROVIDER["LLM Provider<br/>provider.generate(...)<br/>src/providers.py"]
+        PROVIDER --> F2["Final Answer"]
+
+        C2["Baseline Constraints<br/>Tool calls: 0<br/>Action: none<br/>Observation: none<br/>ReAct loop: none<br/>No real CV/JD/interview lookup"]
+        RBC -.-> C2
+    end
+
+%% Phase 2 invariants verified against src/app.py, src/prompts.py, and src/providers.py:
+%% - run_baseline_chatbot() calls provider.generate(user_query, system_prompt=CHATBOT_BASELINE_PROMPT).
+%% - Baseline does not call AVAILABLE_TOOLS.
+%% - Baseline has no Action, no Observation, and no ReAct iteration.
+%% - For recruitment questions requiring external data, baseline can only answer from model knowledge or fallback safely.
