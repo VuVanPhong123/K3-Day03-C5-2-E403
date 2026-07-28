@@ -204,15 +204,20 @@ if __name__ == "__main__":
     tests = load_test_cases()
     print(f"✅ Đã tải thành công {len(tests)} Test Cases từ config/test_cases.json\n")
     
-    # Chọn ngẫu nhiên 3 Test Cases để chạy thử nghiệm ReAct Agent
+    # Chọn ngẫu nhiên 3 Test Cases để so sánh Chatbot Baseline vs ReAct Agent
     selected_tests = random.sample(tests, min(3, len(tests)))
     
     print("==================================================")
-    print("🚀 MỐC 3: KIỂM THỬ REACT AGENT LOOP & SAFEGUARDS")
+    print("🚀 SO SÁNH TRỰC TIẾP: CHATBOT BASELINE VS REACT AGENT")
     print("==================================================")
     
     for tc in selected_tests:
         print(f"\n==================================================")
         print(f"📌 [TEST CASE {tc['id']}] ({tc['category']}): {tc['question']}")
         print(f"==================================================")
+        
+        print("\n--- 💬 DEMO 1: CHẠY TRÊN CHATBOT BASELINE (KHÔNG TOOL) ---")
+        run_baseline_chatbot(tc['question'], provider)
+        
+        print("\n--- 🧠 DEMO 2: CHẠY TRÊN REACT AGENT (CÓ TOOL & GUARDRAILS) ---")
         run_react_agent(tc['question'], provider)
