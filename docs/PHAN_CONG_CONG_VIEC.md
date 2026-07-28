@@ -8,7 +8,7 @@
 | Role 2: Tool Engineer | `src/tools.py` | Thiết kế tool, schema, validation, confirmation gate | Nguyễn Quang Vinh(2A202601517) |
 | Role 3: Prompt Engineer | `src/prompts.py` | Baseline prompt, ReAct protocol, guardrails | Hoàng Lê Minh(2A202601601) |
 | Role 4: Core Developer / Integrator | `src/app.py` | Parser, ReAct loop, executor, CLI tích hợp | Đoàn Nhật Nam(2A202601123) |
-| Role 5A: Trace Analyst / QA | `docs/trace_eval.md`, `tests/test_agent.py` | Trace, RCA, acceptance tests, báo cáo | Phạm Sỹ Đức(2A202601601) |
+| Role 5A: Trace Analyst / QA | `docs/trace_eval.md` | Trace, RCA, acceptance tests, báo cáo | Phạm Sỹ Đức(2A202601601) |
 | Role 5B: Flowchart Architect | `docs/hybrid_flowchart.mermaid`, cross-audit | Hybrid flowchart, edge flow, demo evidence | Vũ Văn Phong(2A202601647) |
 
 ## Checklist Hoàn Thành
