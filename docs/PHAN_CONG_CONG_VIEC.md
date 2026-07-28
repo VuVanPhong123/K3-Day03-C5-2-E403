@@ -9,7 +9,7 @@
 | Role 3: Prompt Engineer | `src/prompts.py` | Baseline prompt, ReAct protocol, guardrails | Hoàng Lê Minh |
 | Role 4: Core Developer / Integrator | `src/app.py` | Parser, ReAct loop, executor, CLI tích hợp | Đoàn Nhật Nam |
 | Role 5A: Trace Analyst / QA | `docs/trace_eval.md`, `tests/test_agent.py` | Trace, RCA, acceptance tests, báo cáo | Phạm Sỹ Đức |
-| Role 5B: Flowchart Architect | `docs/hybrid_flowchart.mermaid`, cross-audit | Hybrid flowchart, edge flow, demo evidence | Phong |
+| Role 5B: Flowchart Architect | `docs/hybrid_flowchart.mermaid`, cross-audit | Hybrid flowchart, edge flow, demo evidence | Vũ Văn Phong |
 
 ## Checklist Hoàn Thành
 
